@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Introductions · Warmbit</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111;
+    --border: #1e1e1e;
+    --accent: #c8f25a;
+    --text: #e8e8e8;
+    --muted: #555;
+    --tag-linkedin: #1a3a5c;
+    --tag-newsletter: #3a1a5c;
+    --tag-email: #3a2a1a;
+    --tag-notes: #1a3a2a;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+
+  .logo span {
+    color: var(--accent);
+  }
+
+  .powered {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* Main content */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 40px;
+  }
+
+  /* Query banner */
+  .query-banner {
+    margin-bottom: 40px;
+  }
+
+  .query-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .query-text {
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .meta-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+  }
+
+  .meta-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+
+  /* Results count */
+  .results-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* Results grid */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 640px) {
+    .results-grid { grid-template-columns: 1fr; }
+    .container { padding: 32px 20px; }
+    .header { padding: 16px 20px; }
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover {
+    border-color: #333;
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .card-name {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .card-title {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .source-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+
+  .source-badge.linkedin { background: var(--tag-linkedin); color: #6ba3d6; }
+  .source-badge.newsletter { background: var(--tag-newsletter); color: #a87dd4; }
+  .source-badge.email { background: var(--tag-email); color: #d4a574; }
+  .source-badge.notes { background: var(--tag-notes); color: #74d4a5; }
+
+  /* Score bar */
+  .score-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .score-bar-track {
+    flex: 1;
+    height: 2px;
+    background: #1e1e1e;
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 1px;
+    transition: width 0.6s ease;
+  }
+
+  .score-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    width: 12px;
+    text-align: right;
+  }
+
+  /* Reason */
+  .card-reason {
+    font-size: 13px;
+    color: #999;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  /* Email */
+  .card-email {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-email::before {
+    content: '≈';
+    font-size: 13px;
+  }
+
+  /* Empty / error state */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding: 48px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #333;
+    letter-spacing: 0.1em;
+    border-top: 1px solid var(--border);
+    margin-top: 48px;
+  }
+
+  .footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* Fade in animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    animation: fadeUp 0.4s ease both;
+  }
+
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.10s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+  .card:nth-child(4) { animation-delay: 0.20s; }
+  .card:nth-child(5) { animation-delay: 0.25s; }
+  .card:nth-child(6) { animation-delay: 0.30s; }
+  .card:nth-child(7) { animation-delay: 0.35s; }
+  .card:nth-child(8) { animation-delay: 0.40s; }
+  .card:nth-child(9) { animation-delay: 0.45s; }
+  .card:nth-child(10) { animation-delay: 0.50s; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">WARM<span>BIT</span></div>
+  <div class="powered">NETWORK INTELLIGENCE</div>
+</div>
+
+<div class="container">
+  <div id="content">
+    <div class="empty-state">LOADING...</div>
+  </div>
+</div>
+
+<div class="footer">
+  POWERED BY <a href="#">WARMBIT</a> · NETWORK INTELLIGENCE
+</div>
+
+<script>
+function decodeResults(encoded) {
+  try {
+    return JSON.parse(decodeURIComponent(atob(encoded)));
+  } catch {
+    return null;
+  }
+}
+
+function getSourceClass(source) {
+  if (!source) return 'linkedin';
+  const s = source.toLowerCase();
+  if (s.includes('newsletter')) return 'newsletter';
+  if (s.includes('email')) return 'email';
+  if (s.includes('note')) return 'notes';
+  return 'linkedin';
+}
+
+function render(payload) {
+  const content = document.getElementById('content');
+  const { q, r: results, t } = payload;
+
+  if (!results || results.length === 0) {
+    content.innerHTML = '<div class="empty-state">NO RESULTS FOUND</div>';
+    return;
+  }
+
+  const date = t ? new Date(t).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+
+  let html = `
+    <div class="query-banner">
+      <div class="query-label">Search Query</div>
+      <div class="query-text">${q || 'Network Search'}</div>
+      <div class="meta-row">
+        <div class="meta-pill">${results.length} RESULTS</div>
+        ${date ? `<div class="meta-pill">${date}</div>` : ''}
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="results-count">${results.length} INTRODUCTION${results.length !== 1 ? 'S' : ''}</div>
+    <div class="results-grid">
+  `;
+
+  results.forEach(r => {
+    const score = r.relevance_score || 0;
+    const pct = (score / 10) * 100;
+    const sourceClass = getSourceClass(r.source);
+    const sourceLabel = (r.source || 'linkedin').toUpperCase();
+    const subtitle = [r.position, r.company].filter(Boolean).join(' · ');
+
+    html += `
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-name">${r.name || 'Unknown'}</div>
+            ${subtitle ? `<div class="card-title">${subtitle}</div>` : ''}
+          </div>
+          <span class="source-badge ${sourceClass}">${sourceLabel}</span>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width: ${pct}%"></div>
+          </div>
+          <div class="score-num">${score}</div>
+        </div>
+        <div class="card-reason">${r.reason || ''}</div>
+        ${r.email ? `<div class="card-email">${r.email}</div>` : ''}
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  content.innerHTML = html;
+}
+
+// Load from URL
+const params = new URLSearchParams(window.location.search);
+const shared = params.get('share');
+
+if (shared) {
+  const payload = decodeResults(shared);
+  if (payload) {
+    render(payload);
+  } else {
+    document.getElementById('content').innerHTML = '<div class="empty-state">INVALID OR EXPIRED LINK</div>';
+  }
+} else {
+  document.getElementById('content').innerHTML = '<div class="empty-state">NO RESULTS TO DISPLAY · THIS IS A SHARED RESULTS PAGE</div>';
+}
+</script>
+</body>
+</html>

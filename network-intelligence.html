@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warmbit · Network Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0a; --surface: #111111; --border: #1e1e1e; --border-hover: #2a2a2a;
+    --text: #e8e8e8; --muted: #555; --muted-2: #333; --accent: #c8f25a;
+    --accent-dim: rgba(200,242,90,0.08); --linkedin: #4a9eff; --email: #ff8c4a;
+    --newsletter: #b06af5; --notes: #4aff9e;
+  }
+  html { font-size: 14px; }
+  body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; letter-spacing: 0.01em; }
+  header { padding: 28px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .logo { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .logo strong { color: var(--accent); font-weight: 400; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  main { max-width: 900px; margin: 0 auto; padding: 80px 40px 60px; }
+  .search-wrapper { margin-bottom: 64px; }
+  .search-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .search-box { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; transition: border-color 0.2s; background: var(--surface); }
+  .search-box:focus-within { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .search-input { flex: 1; background: transparent; border: none; outline: none; padding: 16px 20px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 300; color: var(--text); letter-spacing: 0.01em; }
+  .search-input::placeholder { color: var(--muted); }
+  .search-btn { background: var(--accent); color: #0a0a0a; border: none; padding: 0 28px; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+  .search-btn:hover { opacity: 0.85; }
+  .search-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .loader { display: none; align-items: center; justify-content: center; gap: 8px; padding: 80px 0; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; }
+  .loader.active { display: flex; }
+  .loader-dots { display: flex; gap: 4px; }
+  .loader-dots span { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; animation: dot 1.2s ease-in-out infinite; }
+  .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+  .empty { display: none; text-align: center; padding: 80px 0; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; }
+  .empty.active { display: block; }
+  .results-header { display: none; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .results-header.active { display: flex; }
+  .results-count { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .share-btn { background: transparent; border: 1px solid var(--accent); color: var(--accent); padding: 6px 14px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .share-btn:hover { background: var(--accent-dim); }
+  .share-btn.copied { background: var(--accent); color: #0a0a0a; }
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 24px; transition: border-color 0.2s; display: flex; flex-direction: column; gap: 16px; animation: fadeUp 0.3s ease forwards; opacity: 0; }
+  .card:hover { border-color: var(--border-hover); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card-name { font-size: 16px; font-weight: 400; color: var(--text); line-height: 1.3; }
+  .card-title { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 300; }
+  .badge { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px; border-radius: 2px; white-space: nowrap; flex-shrink: 0; }
+  .badge-linkedin { background: rgba(74,158,255,0.1); color: var(--linkedin); border: 1px solid rgba(74,158,255,0.2); }
+  .badge-email { background: rgba(255,140,74,0.1); color: var(--email); border: 1px solid rgba(255,140,74,0.2); }
+  .badge-newsletter { background: rgba(176,106,245,0.1); color: var(--newsletter); border: 1px solid rgba(176,106,245,0.2); }
+  .badge-notes { background: rgba(74,255,158,0.1); color: var(--notes); border: 1px solid rgba(74,255,158,0.2); }
+  .score-row { display: flex; align-items: center; gap: 10px; }
+  .score-bar { flex: 1; height: 2px; background: var(--muted-2); border-radius: 1px; overflow: hidden; }
+  .score-fill { height: 100%; background: var(--accent); border-radius: 1px; transition: width 0.6s ease; }
+  .score-num { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); min-width: 16px; text-align: right; }
+  .card-reason { font-size: 13px; line-height: 1.65; color: #888; font-weight: 300; }
+  .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); gap: 12px; }
+  .card-email { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .draft-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+  .draft-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 100; align-items: center; justify-content: center; padding: 40px; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 560px; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px; transition: color 0.15s; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { font-size: 13px; line-height: 1.7; color: #aaa; white-space: pre-wrap; font-weight: 300; min-height: 100px; }
+  .modal-loading { display: flex; align-items: center; gap: 8px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; }
+  .copy-btn { align-self: flex-start; background: var(--accent); color: #0a0a0a; border: none; padding: 10px 20px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; }
+  .copy-btn:hover { opacity: 0.85; }
+  @media (max-width: 640px) { .results-grid { grid-template-columns: 1fr; } main { padding: 40px 20px; } header { padding: 20px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">WARM<strong>BIT</strong></span>
+  <div class="status-dot" title="Backend connected"></div>
+</header>
+
+<main>
+  <div class="search-wrapper">
+    <div class="search-label">Query your network</div>
+    <div class="search-box">
+      <input type="text" class="search-input" id="searchInput" placeholder="Who in my network would be a good investor for https://askchapter.org/?" />
+      <button class="search-btn" id="searchBtn" onclick="doSearch()">Search</button>
+    </div>
+  </div>
+
+  <div class="loader" id="loader">
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+    <span>Searching your network</span>
+  </div>
+
+  <div class="empty" id="empty">No results found.</div>
+
+  <div class="results-header" id="resultsHeader">
+    <span class="results-count" id="resultsCount"></span>
+    <button class="share-btn" id="shareBtn" onclick="shareResults()">Share Results →</button>
+  </div>
+  <div class="results-grid" id="resultsGrid"></div>
+</main>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">Draft Email</span>
+      <button class="modal-close" onclick="closeModalDirect()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody">
+      <div class="modal-loading" id="modalLoading">
+        <div class="loader-dots"><span></span><span></span><span></span></div>
+        <span>Drafting email...</span>
+      </div>
+      <span id="modalText"></span>
+    </div>
+    <button class="copy-btn" id="copyBtn" onclick="copyEmail()" style="display:none">Copy to clipboard</button>
+  </div>
+</div>
+
+<script>
+const API = 'https://email-intelligence-production-3b44.up.railway.app';
+
+let _lastQuery = '';
+let _lastResults = [];
+
+document.getElementById('searchInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doSearch();
+});
+
+async function doSearch() {
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) return;
+
+  const btn = document.getElementById('searchBtn');
+  const loader = document.getElementById('loader');
+  const empty = document.getElementById('empty');
+  const grid = document.getElementById('resultsGrid');
+  const header = document.getElementById('resultsHeader');
+
+  btn.disabled = true;
+  loader.classList.add('active');
+  empty.classList.remove('active');
+  grid.innerHTML = '';
+  header.classList.remove('active');
+
+  try {
+    const res = await fetch(`${API}/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: query })
+    });
+    const data = await res.json();
+    const results = data.results ?? [];
+
+    _lastQuery = query;
+    _lastResults = results;
+
+    if (results.length === 0) {
+      empty.classList.add('active');
+    } else {
+      header.classList.add('active');
+      document.getElementById('resultsCount').textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
+      results.forEach((r, i) => grid.appendChild(buildCard(r, i)));
+    }
+  } catch (err) {
+    empty.textContent = 'Error connecting to backend.';
+    empty.classList.add('active');
+  } finally {
+    loader.classList.remove('active');
+    btn.disabled = false;
+  }
+}
+
+function buildCard(r, index) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.animationDelay = `${index * 0.05}s`;
+
+  const source = (r.source || 'email').toLowerCase();
+  let badgeClass = 'badge-email';
+  if (source.includes('linkedin')) badgeClass = 'badge-linkedin';
+  else if (source.includes('newsletter')) badgeClass = 'badge-newsletter';
+  else if (source.includes('note')) badgeClass = 'badge-notes';
+
+  const score = r.relevance_score ?? 0;
+  const scoreWidth = (score / 10) * 100;
+
+  card.innerHTML = `
+    <div class="card-top">
+      <div>
+        <div class="card-name">${r.name || 'Unknown'}</div>
+        <div class="card-title">${[r.position, r.company].filter(Boolean).join(' · ') || ''}</div>
+      </div>
+      <span class="badge ${badgeClass}">${source}</span>
+    </div>
+    <div class="score-row">
+      <div class="score-bar"><div class="score-fill" style="width:${scoreWidth}%"></div></div>
+      <span class="score-num">${score}</span>
+    </div>
+    <div class="card-reason">${r.reason || ''}</div>
+    <div class="card-footer">
+      <span class="card-email">${r.email ? '✉ ' + r.email : ''}</span>
+      <button class="draft-btn" onclick="draftEmail(${JSON.stringify(r).replace(/"/g, '&quot;')})">Draft email →</button>
+    </div>
+  `;
+  return card;
+}
+
+function shareResults() {
+  if (!_lastResults.length) return;
+  const payload = { q: _lastQuery, r: _lastResults, t: Date.now() };
+  const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
+  const base = window.location.href.split('?')[0].replace('network-intelligence.html', '');
+  const url = `${base}shared.html?share=${encoded}`;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('shareBtn');
+    btn.textContent = 'LINK COPIED ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Share Results →'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+async function draftEmail(contact) {
+  const overlay = document.getElementById('modalOverlay');
+  const loading = document.getElementById('modalLoading');
+  const text = document.getElementById('modalText');
+  const copyBtn = document.getElementById('copyBtn');
+  document.getElementById('modalTitle').textContent = `Email to ${contact.name}`;
+
+  overlay.classList.add('active');
+  loading.style.display = 'flex';
+  text.textContent = '';
+  copyBtn.style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/draft_email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        question: `Draft a warm outreach email to ${contact.name}, ${contact.position} at ${contact.company}. Context: ${contact.reason}`
+      })
+    });
+    const data = await res.json();
+    loading.style.display = 'none';
+    text.textContent = data.email || 'Could not generate email.';
+    copyBtn.style.display = 'block';
+  } catch {
+    loading.style.display = 'none';
+    text.textContent = 'Error connecting to backend.';
+  }
+}
+
+function copyEmail() {
+  const text = document.getElementById('modalText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy to clipboard', 2000);
+  });
+}
+
+function closeModal(e) { if (e.target === document.getElementById('modalOverlay')) closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modalOverlay').classList.remove('active'); }
+</script>
+</body>
+</html>
