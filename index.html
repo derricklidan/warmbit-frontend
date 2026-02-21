@@ -216,18 +216,29 @@ function buildCard(r, index) {
   return card;
 }
 
-function shareResults() {
+async function shareResults() {
   if (!_lastResults.length) return;
-  const payload = { q: _lastQuery, r: _lastResults, t: Date.now() };
-  const encoded = btoa(encodeURIComponent(JSON.stringify(payload)));
-  const base = window.location.href.split('?')[0].replace('network-intelligence.html', '');
-  const url = `${base}shared.html?share=${encoded}`;
-  navigator.clipboard.writeText(url).then(() => {
-    const btn = document.getElementById('shareBtn');
+  const btn = document.getElementById('shareBtn');
+  btn.textContent = 'GENERATING...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API}/share`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: _lastQuery, results: _lastResults })
+    });
+    const data = await res.json();
+    const url = `https://warmbit.co/s/${data.id}`;
+    await navigator.clipboard.writeText(url);
     btn.textContent = 'LINK COPIED ✓';
     btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'Share Results →'; btn.classList.remove('copied'); }, 2500);
-  });
+    setTimeout(() => { btn.textContent = 'Share Results →'; btn.classList.remove('copied'); btn.disabled = false; }, 2500);
+  } catch (e) {
+    btn.textContent = 'ERROR — TRY AGAIN';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = 'Share Results →'; }, 2000);
+  }
 }
 
 async function draftEmail(contact) {
