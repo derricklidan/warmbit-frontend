@@ -21,8 +21,7 @@
   .logo strong { color: var(--accent); font-weight: 400; }
   .nav-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-  main { max-width: 900px; width: 100%; margin: 0 auto; padding: 80px 40px 60px; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }  main { max-width: 900px; width: 100%; margin: 0 auto; padding: 80px 40px 60px; }
   .search-wrapper { margin-bottom: 64px; }
   .search-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
   .search-box { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; transition: border-color 0.2s; background: var(--surface); }
@@ -87,7 +86,7 @@
 <header>
   <div class="header-inner">
     <span class="logo">WARM<strong>BIT</strong></span>
-    <span class="nav-label">NETWORK INTELLIGENCE</span>
+    <div class="status-dot" title="Backend connected"></div>
   </div>
 </header>
 
