@@ -236,8 +236,22 @@ async function shareResults() {
     });
     const data = await res.json();
     const url = `https://warmbit.co/s/${data.id}`;
-    await navigator.clipboard.writeText(url);
-    btn.textContent = 'LINK COPIED ✓';
+
+    // Try native share on mobile first
+    if (navigator.share) {
+      await navigator.share({ title: 'Warmbit Results', url });
+      btn.textContent = 'SHARED ✓';
+    } else {
+      // Try clipboard
+      try {
+        await navigator.clipboard.writeText(url);
+        btn.textContent = 'LINK COPIED ✓';
+      } catch {
+        // Fallback: show URL in prompt
+        prompt('Copy this link:', url);
+        btn.textContent = 'LINK READY ✓';
+      }
+    }
     btn.classList.add('copied');
     setTimeout(() => { btn.textContent = 'Share Results →'; btn.classList.remove('copied'); btn.disabled = false; }, 2500);
   } catch (e) {
