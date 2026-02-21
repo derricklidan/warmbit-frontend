@@ -376,17 +376,37 @@ function render(payload) {
   content.innerHTML = html;
 }
 
-// Load from URL
-const params = new URLSearchParams(window.location.search);
-const shared = params.get('share');
+// Load from short ID in path e.g. warmbit.co/s/abc123
+const API = 'https://email-intelligence-production-3b44.up.railway.app';
+const pathParts = window.location.pathname.split('/');
+const shareId = pathParts[pathParts.length - 1];
 
-if (shared) {
-  const payload = decodeResults(shared);
-  if (payload) {
+// Also support legacy ?share= param
+const params = new URLSearchParams(window.location.search);
+const legacyShare = params.get('share');
+
+if (legacyShare) {
+  // Legacy long URL support
+  try {
+    const payload = JSON.parse(decodeURIComponent(atob(legacyShare)));
     render(payload);
-  } else {
-    document.getElementById('content').innerHTML = '<div class="empty-state">INVALID OR EXPIRED LINK</div>';
+  } catch {
+    document.getElementById('content').innerHTML = '<div class="empty-state">INVALID LINK</div>';
   }
+} else if (shareId && shareId !== 'shared.html') {
+  // New short URL — fetch from API
+  fetch(`${API}/s/${shareId}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        document.getElementById('content').innerHTML = '<div class="empty-state">RESULTS NOT FOUND</div>';
+      } else {
+        render({ q: data.query, r: data.results, t: new Date(data.created_at).getTime() });
+      }
+    })
+    .catch(() => {
+      document.getElementById('content').innerHTML = '<div class="empty-state">ERROR LOADING RESULTS</div>';
+    });
 } else {
   document.getElementById('content').innerHTML = '<div class="empty-state">NO RESULTS TO DISPLAY · THIS IS A SHARED RESULTS PAGE</div>';
 }
