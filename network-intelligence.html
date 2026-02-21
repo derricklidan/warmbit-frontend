@@ -16,9 +16,10 @@
   html { font-size: 14px; }
   body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; letter-spacing: 0.01em; }
   header { border-bottom: 1px solid var(--border); }
-  .header-inner { max-width: 900px; margin: 0 auto; padding: 28px 40px; display: flex; align-items: center; justify-content: space-between; }
-  .logo { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); }
+  .header-inner { max-width: 900px; margin: 0 auto; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
+  .logo { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text); }
   .logo strong { color: var(--accent); font-weight: 400; }
+  .nav-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
   .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
   main { max-width: 900px; width: 100%; margin: 0 auto; padding: 80px 40px 60px; }
@@ -86,7 +87,7 @@
 <header>
   <div class="header-inner">
     <span class="logo">WARM<strong>BIT</strong></span>
-    <div class="status-dot" title="Backend connected"></div>
+    <span class="nav-label">NETWORK INTELLIGENCE</span>
   </div>
 </header>
 
