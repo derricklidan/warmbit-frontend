@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Requested Intros · Warmbit</title>
+<title>Intro Requests · Warmbit</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,40 +14,49 @@
   }
   body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; min-height: 100vh; }
   header { border-bottom: 1px solid var(--border); }
-  .header-inner { max-width: 900px; margin: 0 auto; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
+  .header-inner { max-width: 960px; margin: 0 auto; padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; }
   .logo { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text); }
   .logo strong { color: var(--accent); font-weight: 400; }
-  .back-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--border); padding: 6px 14px; border-radius: 2px; cursor: pointer; text-decoration: none; transition: all 0.15s; }
-  .back-btn:hover { border-color: var(--accent); color: var(--accent); }
-  main { max-width: 900px; margin: 0 auto; padding: 48px 40px 80px; }
+  .nav-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.1em; }
+  main { max-width: 960px; margin: 0 auto; padding: 48px 40px 80px; }
   .page-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-  .page-title { font-size: 24px; font-weight: 400; margin-bottom: 8px; }
-  .page-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-bottom: 40px; }
-  .divider { height: 1px; background: var(--border); margin: 32px 0; }
-  .person-block { margin-bottom: 40px; }
-  .person-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
-  .person-info { flex: 1; }
-  .person-name { font-size: 18px; font-weight: 400; }
-  .person-title { font-size: 12px; color: var(--muted); margin-top: 4px; }
-  .badge { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 8px; border-radius: 2px; white-space: nowrap; flex-shrink: 0; }
+  .page-title { font-size: 24px; font-weight: 400; margin-bottom: 32px; }
+  .filters { display: flex; gap: 8px; margin-bottom: 28px; }
+  .filter-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--border); padding: 6px 14px; border-radius: 2px; cursor: pointer; transition: all 0.15s; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .request-block { border: 1px solid var(--border); border-radius: 4px; padding: 24px; margin-bottom: 16px; transition: border-color 0.2s; }
+  .request-block.done { opacity: 0.45; }
+  .request-block:hover { border-color: var(--border-hover); }
+  .request-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 12px; }
+  .requester { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.05em; }
+  .request-date { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+  .request-query { font-size: 13px; color: #888; margin-bottom: 16px; font-style: italic; }
+  .people-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .person-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 12px 14px; }
+  .person-chip-name { font-size: 13px; font-weight: 400; margin-bottom: 3px; }
+  .person-chip-title { font-size: 11px; color: var(--muted); }
+  .person-chip-linkedin { display: inline-block; margin-top: 6px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+  .person-chip-linkedin:hover { color: var(--accent); }
+  .badge { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 6px; border-radius: 2px; white-space: nowrap; display: inline-block; margin-top: 4px; }
   .badge-linkedin { background: rgba(74,158,255,0.1); color: var(--linkedin); border: 1px solid rgba(74,158,255,0.2); }
   .badge-email { background: rgba(255,140,74,0.1); color: var(--email); border: 1px solid rgba(255,140,74,0.2); }
   .badge-newsletter { background: rgba(176,106,245,0.1); color: var(--newsletter); border: 1px solid rgba(176,106,245,0.2); }
-  .badge-notes { background: rgba(74,255,158,0.1); color: var(--notes); border: 1px solid rgba(74,255,158,0.2); }
-  .person-reason { font-size: 13px; color: #888; line-height: 1.65; margin-bottom: 16px; }
-  .email-box { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 20px; }
-  .email-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-  .email-body { font-size: 13px; line-height: 1.7; color: #aaa; white-space: pre-wrap; min-height: 80px; }
-  .email-loading { display: flex; align-items: center; gap: 8px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; }
-  .loader-dots { display: flex; gap: 4px; }
-  .loader-dots span { width: 4px; height: 4px; background: var(--accent); border-radius: 50%; animation: dot 1.2s ease-in-out infinite; }
-  .loader-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .loader-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes dot { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
-  .copy-btn { margin-top: 12px; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
-  .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .person-email { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 8px; }
-  @media (max-width: 640px) { main { padding: 32px 20px; } .header-inner { padding: 20px; } }
+  .request-actions { display: flex; gap: 10px; align-items: center; padding-top: 12px; border-top: 1px solid var(--border); }
+  .done-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 16px; border-radius: 2px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--accent); color: var(--accent); background: transparent; }
+  .done-btn:hover { background: var(--accent); color: #0a0a0a; }
+  .done-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.08em; }
+  .count-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; }
+  .empty { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; padding: 80px 0; letter-spacing: 0.08em; }
+  #authGate { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+  .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 40px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 16px; }
+  .auth-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .auth-desc { font-size: 13px; color: #888; }
+  .auth-input { background: var(--bg); border: 1px solid var(--border); border-radius: 2px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); outline: none; width: 100%; }
+  .auth-input:focus { border-color: var(--accent); }
+  .auth-error { font-family: 'DM Mono', monospace; font-size: 10px; color: #ff6b6b; display: none; }
+  .auth-btn { background: var(--accent); color: #0a0a0a; border: none; padding: 10px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+  @media (max-width: 640px) { main { padding: 32px 20px; } .header-inner { padding: 20px; } .people-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -55,19 +64,56 @@
 <header>
   <div class="header-inner">
     <span class="logo">WARM<strong>BIT</strong></span>
-    <a href="/" class="back-btn">← Back to Search</a>
+    <span class="nav-label">INTRO REQUESTS</span>
   </div>
 </header>
 
-<main>
-  <div class="page-label">Requested Intros</div>
-  <div class="page-title" id="pageTitle">Loading...</div>
-  <div class="page-meta" id="pageMeta"></div>
-  <div id="peopleList"></div>
+<div id="authGate">
+  <div class="auth-box">
+    <div class="auth-label">Access Required</div>
+    <div class="auth-desc">Enter your password to view intro requests.</div>
+    <input type="password" class="auth-input" id="passwordInput" placeholder="Password" onkeydown="if(event.key==='Enter') checkPassword()" />
+    <div class="auth-error" id="passwordError">Incorrect password.</div>
+    <button class="auth-btn" onclick="checkPassword()">Enter →</button>
+  </div>
+</div>
+
+<main id="mainContent" style="display:none;">
+  <div class="page-label">Admin</div>
+  <div class="page-title">Intro Requests</div>
+  <div class="filters">
+    <button class="filter-btn active" onclick="setFilter('all', this)">All</button>
+    <button class="filter-btn" onclick="setFilter('pending', this)">Pending</button>
+    <button class="filter-btn" onclick="setFilter('done', this)">Done</button>
+  </div>
+  <div id="requestsList"><div class="empty">Loading...</div></div>
 </main>
 
 <script>
 const API = 'https://email-intelligence-production-3b44.up.railway.app';
+const INTROS_PASSWORD = 'derrick';
+let _allRequests = [];
+let _currentFilter = 'all';
+
+function checkPassword() {
+  const input = document.getElementById('passwordInput').value;
+  if (input === INTROS_PASSWORD) {
+    document.getElementById('authGate').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    loadRequests();
+  } else {
+    document.getElementById('passwordError').style.display = 'block';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('passwordInput').focus();
+  }
+}
+
+function setFilter(filter, btn) {
+  _currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRequests();
+}
 
 function getBadgeClass(source) {
   const s = (source || '').toLowerCase();
@@ -77,112 +123,76 @@ function getBadgeClass(source) {
   return 'badge-email';
 }
 
-async function draftIntroEmail(person, query, container) {
-  const loadingEl = container.querySelector('.email-loading');
-  const bodyEl = container.querySelector('.email-body');
-  const copyBtn = container.querySelector('.copy-btn');
-
+async function markDone(id, btn, blockId) {
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
   try {
-    const res = await fetch(`${API}/draft_email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        question: `Draft a warm intro request email to ${person.name}, ${person.position} at ${person.company}. Context about why they're relevant: ${person.reason}. The search query was: "${query}".`
-      })
-    });
-    const data = await res.json();
-    loadingEl.style.display = 'none';
-    bodyEl.textContent = data.email || 'Could not generate email.';
-    copyBtn.style.display = 'inline-block';
-  } catch {
-    loadingEl.style.display = 'none';
-    bodyEl.textContent = 'Error generating email.';
-  }
-}
-
-function copyEmail(btn, bodyEl) {
-  navigator.clipboard.writeText(bodyEl.textContent).then(() => {
-    btn.textContent = 'Copied!';
-    setTimeout(() => btn.textContent = 'Copy email', 2000);
-  });
-}
-
-function render(query, people) {
-  document.getElementById('pageTitle').textContent = `${people.length} Introduction${people.length !== 1 ? 's' : ''} Requested`;
-  document.getElementById('pageMeta').textContent = `For: "${query}"`;
-
-  const list = document.getElementById('peopleList');
-  list.innerHTML = '';
-
-  people.forEach((p, i) => {
-    const source = (p.source || 'email').toLowerCase();
-    const badgeClass = getBadgeClass(source);
-    const subtitle = [p.position, p.company].filter(Boolean).join(' · ');
-
-    const block = document.createElement('div');
-    block.className = 'person-block';
-    block.innerHTML = `
-      ${i > 0 ? '<div class="divider"></div>' : ''}
-      <div class="person-header">
-        <div class="person-info">
-          <div class="person-name">${p.name || 'Unknown'}</div>
-          ${subtitle ? `<div class="person-title">${subtitle}</div>` : ''}
-          ${p.email ? `<div class="person-email">✉ ${p.email}</div>` : ''}
-          ${p.linkedin_url ? `<a href="${p.linkedin_url}" target="_blank" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);text-decoration:none;margin-top:6px;display:inline-block;">LinkedIn →</a>` : ''}
-        </div>
-        <span class="badge ${badgeClass}">${source}</span>
-      </div>
-      <div class="person-reason">${p.reason || ''}</div>
-      <div class="email-box">
-        <div class="email-label">Draft Intro Email</div>
-        <div class="email-loading">
-          <div class="loader-dots"><span></span><span></span><span></span></div>
-          <span>Drafting email...</span>
-        </div>
-        <div class="email-body" style="display:none"></div>
-        <button class="copy-btn" style="display:none" onclick="copyEmail(this, this.previousElementSibling)">Copy email</button>
-      </div>
-    `;
-
-    list.appendChild(block);
-
-    // Draft email for this person
-    const emailBox = block.querySelector('.email-box');
-    const bodyEl = block.querySelector('.email-body');
-    
-    draftIntroEmail(p, query, emailBox).then(() => {
-      bodyEl.style.display = 'block';
-    });
-  });
-}
-
-// Parse data from URL
-const params = new URLSearchParams(window.location.search);
-const shortId = params.get('id');
-const rawData = params.get('data');
-
-if (shortId) {
-  fetch(`${API}/intro_request/${shortId}`)
-    .then(r => r.json())
-    .then(data => {
-      if (data.error) {
-        document.getElementById('pageTitle').textContent = 'Intros not found.';
-      } else {
-        render(data.query, data.requested_people);
-      }
-    })
-    .catch(() => {
-      document.getElementById('pageTitle').textContent = 'Error loading intros.';
-    });
-} else if (rawData) {
-  try {
-    const parsed = JSON.parse(decodeURIComponent(rawData));
-    render(parsed.query, parsed.people);
+    await fetch(`${API}/intro_request/${id}/complete`, { method: 'POST' });
+    const req = _allRequests.find(r => r.id === id);
+    if (req) req.completed = true;
+    renderRequests();
   } catch (e) {
-    document.getElementById('pageTitle').textContent = 'Error loading intros.';
+    btn.textContent = 'Error — retry';
+    btn.disabled = false;
   }
-} else {
-  document.getElementById('pageTitle').textContent = 'No intros selected.';
+}
+
+function renderRequests() {
+  const list = document.getElementById('requestsList');
+  let filtered = _allRequests;
+  if (_currentFilter === 'pending') filtered = _allRequests.filter(r => !r.completed);
+  if (_currentFilter === 'done') filtered = _allRequests.filter(r => r.completed);
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty">No ${_currentFilter === 'all' ? '' : _currentFilter + ' '}requests.</div>`;
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(req => {
+    const date = new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const people = req.requested_people || [];
+    const block = document.createElement('div');
+    block.className = `request-block${req.completed ? ' done' : ''}`;
+
+    const peopleHtml = people.map(p => {
+      const subtitle = [p.position, p.company].filter(Boolean).join(' · ');
+      const badgeClass = getBadgeClass(p.source);
+      return `<div class="person-chip">
+        <div class="person-chip-name">${p.name || 'Unknown'}</div>
+        ${subtitle ? `<div class="person-chip-title">${subtitle}</div>` : ''}
+        <span class="badge ${badgeClass}">${(p.source || 'email').toLowerCase()}</span>
+        ${p.linkedin_url ? `<a href="${p.linkedin_url}" target="_blank" class="person-chip-linkedin">LinkedIn →</a>` : ''}
+      </div>`;
+    }).join('');
+
+    block.innerHTML = `
+      <div class="request-meta">
+        <span class="requester">✉ ${req.requester_email}</span>
+        <span class="request-date">${date}</span>
+      </div>
+      ${req.query ? `<div class="request-query">"${req.query}"</div>` : ''}
+      <div class="people-grid">${peopleHtml}</div>
+      <div class="request-actions">
+        ${req.completed
+          ? `<span class="done-tag">✓ Intro sent</span>`
+          : `<button class="done-btn" onclick="markDone('${req.id}', this)">Mark Intro Done</button>`
+        }
+        <span class="count-tag">${people.length} intro${people.length !== 1 ? 's' : ''} requested</span>
+      </div>`;
+    list.appendChild(block);
+  });
+}
+
+async function loadRequests() {
+  try {
+    const res = await fetch(`${API}/intro_requests`);
+    const data = await res.json();
+    _allRequests = (data.requests || []).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    renderRequests();
+  } catch (e) {
+    document.getElementById('requestsList').innerHTML = '<div class="empty">Error loading requests.</div>';
+  }
 }
 </script>
 </body>

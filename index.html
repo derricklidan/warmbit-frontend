@@ -105,6 +105,13 @@
   .email-modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
   .email-modal-confirm { background: var(--accent); color: #0a0a0a; border: none; padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
   .email-modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+  .thanks-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 40px; }
+  .thanks-modal-overlay.active { display: flex; }
+  .thanks-modal { background: var(--surface); border: 1px solid var(--accent); border-radius: 4px; width: 100%; max-width: 440px; padding: 40px; display: flex; flex-direction: column; gap: 16px; text-align: center; }
+  .thanks-icon { font-size: 32px; }
+  .thanks-title { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
+  .thanks-desc { font-size: 14px; color: #888; line-height: 1.65; }
+  .thanks-close { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
   @media (max-width: 640px) {
     .results-grid { grid-template-columns: 1fr; }
     main { padding: 40px 20px; }
@@ -318,13 +325,9 @@ async function confirmIntros() {
     console.error('Failed to save intro request', e);
   }
 
-  // Navigate to intros page with short ID
-  const encoded = encodeURIComponent(JSON.stringify({ query: _lastQuery, people }));
-  if (saved && saved.id) {
-    window.location.href = `/intros.html?id=${saved.id}`;
-  } else {
-    window.location.href = `/intros.html?data=${encoded}`;
-  }
+  // Show thank you screen
+  document.getElementById('emailModal').classList.remove('active');
+  document.getElementById('thanksModal').classList.add('active');
 }
 
 function buildCard(r, index) {
@@ -447,6 +450,14 @@ function closeModalDirect() { document.getElementById('modalOverlay').classList.
       <button class="email-modal-cancel" onclick="document.getElementById('emailModal').classList.remove('active')">Cancel</button>
       <button class="email-modal-confirm" id="confirmIntrosBtn" onclick="confirmIntros()">Continue →</button>
     </div>
+  </div>
+</div>
+<div class="thanks-modal-overlay" id="thanksModal">
+  <div class="thanks-modal">
+    <div class="thanks-icon">✓</div>
+    <div class="thanks-title">Request Received</div>
+    <div class="thanks-desc">We'll reach out to those folks and make the intro when we hear back. Keep an eye on your inbox!</div>
+    <button class="thanks-close" onclick="document.getElementById('thanksModal').classList.remove('active'); document.getElementById('requestBar').classList.remove('active');">Done</button>
   </div>
 </div>
 </body>

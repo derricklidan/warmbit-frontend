@@ -383,24 +383,18 @@ async function confirmIntros() {
   confirmBtn.disabled = true;
 
   const people = Array.from(_selectedIntros.values());
-  let saved = null;
   try {
-    const saveRes = await fetch(`${API}/intro_request`, {
+    await fetch(`${API}/intro_request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ requester_email: email, query: _sharedQuery, requested_people: people })
     });
-    saved = await saveRes.json();
   } catch (e) {
     console.error('Failed to save intro request', e);
   }
 
-  const encoded = encodeURIComponent(JSON.stringify({ query: _sharedQuery, people }));
-  if (saved && saved.id) {
-    window.location.href = `/intros.html?id=${saved.id}`;
-  } else {
-    window.location.href = `/intros.html?data=${encoded}`;
-  }
+  document.getElementById('emailModal').classList.remove('active');
+  document.getElementById('thanksModal').classList.add('active');
 }
 
 function render(payload) {
@@ -512,6 +506,15 @@ if (legacyShare) {
       <button class="email-modal-cancel" onclick="document.getElementById('emailModal').classList.remove('active')">Cancel</button>
       <button class="email-modal-confirm" id="confirmIntrosBtn" onclick="confirmIntros()">Continue →</button>
     </div>
+  </div>
+</div>
+<div id="thanksModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center;padding:40px;">
+  <div style="background:#111;border:1px solid #c8f25a;border-radius:4px;width:100%;max-width:440px;padding:40px;display:flex;flex-direction:column;gap:16px;text-align:center;">
+    <div style="font-size:32px;">✓</div>
+    <div style="font-family:'DM Mono',monospace;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#c8f25a;">Request Received</div>
+    <div style="font-size:14px;color:#888;line-height:1.65;">We'll reach out to those folks and make the intro when we hear back. Keep an eye on your inbox!</div>
+    <button onclick="document.getElementById('thanksModal').style.display='none'; document.getElementById('requestBar').classList.remove('active');"
+      style="background:transparent;border:1px solid #1e1e1e;color:#555;padding:8px 18px;border-radius:2px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;margin-top:8px;">Done</button>
   </div>
 </div>
 </body>
