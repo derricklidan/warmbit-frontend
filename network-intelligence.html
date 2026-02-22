@@ -85,6 +85,14 @@
   .chip { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.05em; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 6px 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
   .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
   .chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  @media (max-width: 640px) {
+    .results-grid { grid-template-columns: 1fr; }
+    main { padding: 40px 20px; }
+    .category { flex-direction: column; gap: 6px; }
+    .category-label { min-width: unset; padding-top: 0; }
+    .chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+    .chips::-webkit-scrollbar { display: none; }
+  }
 </style>
 </head>
 <body>
