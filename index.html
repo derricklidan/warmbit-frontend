@@ -306,19 +306,25 @@ async function confirmIntros() {
   const people = Array.from(_selectedIntros.values());
 
   // Save to Supabase via backend
+  let saved = null;
   try {
-    await fetch(`${API}/intro_request`, {
+    const saveRes = await fetch(`${API}/intro_request`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ requester_email: email, query: _lastQuery, requested_people: people })
     });
+    saved = await saveRes.json();
   } catch (e) {
     console.error('Failed to save intro request', e);
   }
 
-  // Navigate to intros page
+  // Navigate to intros page with short ID
   const encoded = encodeURIComponent(JSON.stringify({ query: _lastQuery, people }));
-  window.location.href = `/intros.html?data=${encoded}`;
+  if (saved && saved.id) {
+    window.location.href = `/intros.html?id=${saved.id}`;
+  } else {
+    window.location.href = `/intros.html?data=${encoded}`;
+  }
 }
 
 function buildCard(r, index) {

@@ -156,17 +156,32 @@ function render(query, people) {
 }
 
 // Parse data from URL
-try {
-  const params = new URLSearchParams(window.location.search);
-  const raw = params.get('data');
-  if (raw) {
-    const parsed = JSON.parse(decodeURIComponent(raw));
+const params = new URLSearchParams(window.location.search);
+const shortId = params.get('id');
+const rawData = params.get('data');
+
+if (shortId) {
+  fetch(`${API}/intro_request/${shortId}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        document.getElementById('pageTitle').textContent = 'Intros not found.';
+      } else {
+        render(data.query, data.requested_people);
+      }
+    })
+    .catch(() => {
+      document.getElementById('pageTitle').textContent = 'Error loading intros.';
+    });
+} else if (rawData) {
+  try {
+    const parsed = JSON.parse(decodeURIComponent(rawData));
     render(parsed.query, parsed.people);
-  } else {
-    document.getElementById('pageTitle').textContent = 'No intros selected.';
+  } catch (e) {
+    document.getElementById('pageTitle').textContent = 'Error loading intros.';
   }
-} catch (e) {
-  document.getElementById('pageTitle').textContent = 'Error loading intros.';
+} else {
+  document.getElementById('pageTitle').textContent = 'No intros selected.';
 }
 </script>
 </body>
