@@ -78,7 +78,13 @@
   .modal-loading { display: flex; align-items: center; gap: 8px; color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; }
   .copy-btn { align-self: flex-start; background: var(--accent); color: #0a0a0a; border: none; padding: 10px 20px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: opacity 0.15s; }
   .copy-btn:hover { opacity: 0.85; }
-  @media (max-width: 640px) { .results-grid { grid-template-columns: 1fr; } main { padding: 40px 20px; } header { padding: 20px; } }
+  .inspiration-categories { display: flex; flex-direction: column; gap: 14px; }
+  .category { display: flex; align-items: flex-start; gap: 14px; }
+  .category-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); min-width: 70px; padding-top: 7px; flex-shrink: 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+  .chip { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.05em; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 6px 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 </style>
 </head>
 <body>
@@ -96,6 +102,36 @@
     <div class="search-box">
       <input type="text" class="search-input" id="searchInput" placeholder="Who in my network would be a good investor for https://askchapter.org/?" />
       <button class="search-btn" id="searchBtn" onclick="doSearch()">Search</button>
+    </div>
+
+    <div class="inspiration">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;margin-top:36px;">Examples</div>
+      <div class="inspiration-categories">
+        <div class="category">
+          <span class="category-label">Hiring</span>
+          <div class="chips">
+            <span class="chip" onclick="fillSearch(this)">Who would be a good early engineer at [startup]?</span>
+            <span class="chip" onclick="fillSearch(this)">Find me a head of sales for [startup]</span>
+            <span class="chip" onclick="fillSearch(this)">Who could be a strong CTO hire at [startup]?</span>
+          </div>
+        </div>
+        <div class="category">
+          <span class="category-label">Customers</span>
+          <div class="chips">
+            <span class="chip" onclick="fillSearch(this)">Who in my network could be a customer for [startup]?</span>
+            <span class="chip" onclick="fillSearch(this)">Find me enterprise buyers for [startup]</span>
+            <span class="chip" onclick="fillSearch(this)">Who runs data teams at large companies?</span>
+          </div>
+        </div>
+        <div class="category">
+          <span class="category-label">Investors</span>
+          <div class="chips">
+            <span class="chip" onclick="fillSearch(this)">Who in my network invests in AI infrastructure seed?</span>
+            <span class="chip" onclick="fillSearch(this)">Find me Series A investors for [startup]</span>
+            <span class="chip" onclick="fillSearch(this)">Who are the best enterprise SaaS investors I know?</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -131,7 +167,14 @@
 </div>
 
 <script>
-const API = 'https://email-intelligence-production-3b44.up.railway.app';
+function fillSearch(chip) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  document.getElementById('searchInput').value = chip.textContent;
+  document.getElementById('searchInput').focus();
+}
+
+
 
 let _lastQuery = '';
 let _lastResults = [];
