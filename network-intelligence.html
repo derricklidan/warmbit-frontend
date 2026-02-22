@@ -237,17 +237,15 @@ async function shareResults() {
     const data = await res.json();
     const url = `https://warmbit.co/s/${data.id}`;
 
-    // Try native share on mobile first
+    // Try native share on mobile/safari
     if (navigator.share) {
-      await navigator.share({ title: 'Warmbit Results', url });
-      btn.textContent = 'SHARED ✓';
+      navigator.share({ title: 'Warmbit Results', url }).catch(() => {});
+      btn.textContent = 'LINK READY ✓';
     } else {
-      // Try clipboard
       try {
         await navigator.clipboard.writeText(url);
         btn.textContent = 'LINK COPIED ✓';
       } catch {
-        // Fallback: show URL in prompt
         prompt('Copy this link:', url);
         btn.textContent = 'LINK READY ✓';
       }
