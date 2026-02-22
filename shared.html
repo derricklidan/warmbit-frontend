@@ -129,6 +129,25 @@
     .container { padding: 32px 20px; }
     .header { padding: 16px 20px; }
   }
+  .intro-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+  .intro-btn:hover { border-color: #c8f25a; color: #c8f25a; background: rgba(200,242,90,0.08); }
+  .intro-btn.selected { background: #c8f25a; color: #0a0a0a; border-color: #c8f25a; }
+  .card.selected { border-color: #c8f25a; box-shadow: 0 0 0 1px #c8f25a; }
+  .request-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #0f0f0f; border-top: 1px solid #c8f25a; padding: 16px 40px; z-index: 50; align-items: center; justify-content: space-between; }
+  .request-bar.active { display: flex; }
+  .request-bar-label { font-family: 'DM Mono', monospace; font-size: 11px; color: #c8f25a; letter-spacing: 0.08em; }
+  .request-bar-btn { background: #c8f25a; color: #0a0a0a; border: none; padding: 10px 24px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+  .email-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 40px; }
+  .email-modal-overlay.active { display: flex; }
+  .email-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 440px; padding: 32px; display: flex; flex-direction: column; gap: 16px; }
+  .email-modal-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .email-modal-desc { font-size: 13px; color: #888; line-height: 1.6; }
+  .email-modal-input { background: #0a0a0a; border: 1px solid var(--border); border-radius: 2px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); outline: none; width: 100%; }
+  .email-modal-input:focus { border-color: #c8f25a; }
+  .email-modal-error { font-family: 'DM Mono', monospace; font-size: 10px; color: #ff6b6b; }
+  .email-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .email-modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+  .email-modal-confirm { background: #c8f25a; color: #0a0a0a; border: none; padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
 
   /* Card */
   .card {
@@ -319,9 +338,75 @@ function getSourceClass(source) {
   return 'linkedin';
 }
 
+const _selectedIntros = new Map();
+let _sharedQuery = '';
+
+function updateRequestBar() {
+  const bar = document.getElementById('requestBar');
+  const label = document.getElementById('requestBarLabel');
+  const count = _selectedIntros.size;
+  label.textContent = `${count} SELECTED`;
+  bar.classList.toggle('active', count > 0);
+}
+
+function toggleIntro(btn, r) {
+  const card = btn.closest('.card');
+  const key = r.email || r.name;
+  if (_selectedIntros.has(key)) {
+    _selectedIntros.delete(key);
+    btn.textContent = 'Request Intro';
+    btn.classList.remove('selected');
+    card.classList.remove('selected');
+  } else {
+    _selectedIntros.set(key, r);
+    btn.textContent = 'Selected ✓';
+    btn.classList.add('selected');
+    card.classList.add('selected');
+  }
+  updateRequestBar();
+}
+
+function openIntrosPage() {
+  document.getElementById('emailModal').classList.add('active');
+  document.getElementById('requesterEmail').focus();
+}
+
+async function confirmIntros() {
+  const email = document.getElementById('requesterEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('emailError').textContent = 'Please enter a valid email.';
+    return;
+  }
+  document.getElementById('emailError').textContent = '';
+  const confirmBtn = document.getElementById('confirmIntrosBtn');
+  confirmBtn.textContent = 'SAVING...';
+  confirmBtn.disabled = true;
+
+  const people = Array.from(_selectedIntros.values());
+  let saved = null;
+  try {
+    const saveRes = await fetch(`${API}/intro_request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requester_email: email, query: _sharedQuery, requested_people: people })
+    });
+    saved = await saveRes.json();
+  } catch (e) {
+    console.error('Failed to save intro request', e);
+  }
+
+  const encoded = encodeURIComponent(JSON.stringify({ query: _sharedQuery, people }));
+  if (saved && saved.id) {
+    window.location.href = `/intros.html?id=${saved.id}`;
+  } else {
+    window.location.href = `/intros.html?data=${encoded}`;
+  }
+}
+
 function render(payload) {
   const content = document.getElementById('content');
   const { q, r: results, t } = payload;
+  _sharedQuery = q || '';
 
   if (!results || results.length === 0) {
     content.innerHTML = '<div class="empty-state">NO RESULTS FOUND</div>';
@@ -347,9 +432,8 @@ function render(payload) {
   results.forEach(r => {
     const score = r.relevance_score || 0;
     const pct = (score / 10) * 100;
-    const sourceClass = getSourceClass(r.source);
-    const sourceLabel = (r.source || 'linkedin').toUpperCase();
     const subtitle = [r.position, r.company].filter(Boolean).join(' · ');
+    const rJson = JSON.stringify(r).replace(/"/g, '&quot;');
 
     html += `
       <div class="card">
@@ -358,7 +442,7 @@ function render(payload) {
             <div class="card-name">${r.name || 'Unknown'}</div>
             ${subtitle ? `<div class="card-title">${subtitle}</div>` : ''}
           </div>
-          <span class="source-badge ${sourceClass}">${sourceLabel}</span>
+          <button class="intro-btn" onclick="toggleIntro(this, ${rJson})">Request Intro</button>
         </div>
         <div class="score-bar-wrap">
           <div class="score-bar-track">
@@ -367,8 +451,7 @@ function render(payload) {
           <div class="score-num">${score}</div>
         </div>
         <div class="card-reason">${r.reason || ''}</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-          <div></div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
           ${r.linkedin_url ? `<a href="${r.linkedin_url}" target="_blank" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);padding:6px 14px;border-radius:2px;text-decoration:none;">LinkedIn →</a>` : ''}
         </div>
       </div>
@@ -414,5 +497,22 @@ if (legacyShare) {
   document.getElementById('content').innerHTML = '<div class="empty-state">NO RESULTS TO DISPLAY · THIS IS A SHARED RESULTS PAGE</div>';
 }
 </script>
+<div class="request-bar" id="requestBar">
+  <span class="request-bar-label" id="requestBarLabel">0 SELECTED</span>
+  <button class="request-bar-btn" onclick="openIntrosPage()">Request Intros →</button>
+</div>
+
+<div class="email-modal-overlay" id="emailModal">
+  <div class="email-modal">
+    <div class="email-modal-title">Almost there</div>
+    <div class="email-modal-desc">Enter your email so we can track this intro request.</div>
+    <input type="email" class="email-modal-input" id="requesterEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter') confirmIntros()" />
+    <div class="email-modal-error" id="emailError"></div>
+    <div class="email-modal-actions">
+      <button class="email-modal-cancel" onclick="document.getElementById('emailModal').classList.remove('active')">Cancel</button>
+      <button class="email-modal-confirm" id="confirmIntrosBtn" onclick="confirmIntros()">Continue →</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
