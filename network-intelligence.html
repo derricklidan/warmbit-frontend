@@ -85,6 +85,26 @@
   .chip { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.05em; color: var(--muted); background: var(--surface); border: 1px solid var(--border); border-radius: 2px; padding: 6px 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
   .chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
   .chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .intro-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+  .intro-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .intro-btn.selected { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
+  .card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .request-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #0f0f0f; border-top: 1px solid var(--accent); padding: 16px 40px; z-index: 50; align-items: center; justify-content: space-between; }
+  .request-bar.active { display: flex; }
+  .request-bar-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.08em; }
+  .request-bar-btn { background: var(--accent); color: #0a0a0a; border: none; padding: 10px 24px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+  .email-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 40px; }
+  .email-modal-overlay.active { display: flex; }
+  .email-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 440px; padding: 32px; display: flex; flex-direction: column; gap: 16px; }
+  .email-modal-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .email-modal-desc { font-size: 13px; color: #888; line-height: 1.6; }
+  .email-modal-input { background: var(--bg); border: 1px solid var(--border); border-radius: 2px; padding: 12px 16px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); outline: none; width: 100%; }
+  .email-modal-input:focus { border-color: var(--accent); }
+  .email-modal-error { font-family: 'DM Mono', monospace; font-size: 10px; color: #ff6b6b; }
+  .email-modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .email-modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+  .email-modal-confirm { background: var(--accent); color: #0a0a0a; border: none; padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+  .email-modal-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
   @media (max-width: 640px) {
     .results-grid { grid-template-columns: 1fr; }
     main { padding: 40px 20px; }
@@ -156,6 +176,11 @@
   </div>
   <div class="results-grid" id="resultsGrid"></div>
 </main>
+
+<div class="request-bar" id="requestBar">
+  <span class="request-bar-label" id="requestBarLabel">0 SELECTED</span>
+  <button class="request-bar-btn" onclick="openIntrosPage()">Request Intros →</button>
+</div>
 
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal">
@@ -235,16 +260,71 @@ async function doSearch() {
   }
 }
 
+const _selectedIntros = new Map();
+
+function updateRequestBar() {
+  const bar = document.getElementById('requestBar');
+  const label = document.getElementById('requestBarLabel');
+  const count = _selectedIntros.size;
+  label.textContent = `${count} SELECTED`;
+  bar.classList.toggle('active', count > 0);
+}
+
+function toggleIntro(btn, r) {
+  const card = btn.closest('.card');
+  const key = r.email || r.name;
+  if (_selectedIntros.has(key)) {
+    _selectedIntros.delete(key);
+    btn.textContent = 'Request Intro';
+    btn.classList.remove('selected');
+    card.classList.remove('selected');
+  } else {
+    _selectedIntros.set(key, r);
+    btn.textContent = 'Selected ✓';
+    btn.classList.add('selected');
+    card.classList.add('selected');
+  }
+  updateRequestBar();
+}
+
+function openIntrosPage() {
+  document.getElementById('emailModal').classList.add('active');
+  document.getElementById('requesterEmail').focus();
+}
+
+async function confirmIntros() {
+  const email = document.getElementById('requesterEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    document.getElementById('emailError').textContent = 'Please enter a valid email.';
+    return;
+  }
+  document.getElementById('emailError').textContent = '';
+  const confirmBtn = document.getElementById('confirmIntrosBtn');
+  confirmBtn.textContent = 'SAVING...';
+  confirmBtn.disabled = true;
+
+  const people = Array.from(_selectedIntros.values());
+
+  // Save to Supabase via backend
+  try {
+    await fetch(`${API}/intro_request`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ requester_email: email, query: _lastQuery, requested_people: people })
+    });
+  } catch (e) {
+    console.error('Failed to save intro request', e);
+  }
+
+  // Navigate to intros page
+  const encoded = encodeURIComponent(JSON.stringify({ query: _lastQuery, people }));
+  window.location.href = `/intros.html?data=${encoded}`;
+}
+
 function buildCard(r, index) {
   const card = document.createElement('div');
   card.className = 'card';
   card.style.animationDelay = `${index * 0.05}s`;
-
-  const source = (r.source || 'email').toLowerCase();
-  let badgeClass = 'badge-email';
-  if (source.includes('linkedin')) badgeClass = 'badge-linkedin';
-  else if (source.includes('newsletter')) badgeClass = 'badge-newsletter';
-  else if (source.includes('note')) badgeClass = 'badge-notes';
 
   const score = r.relevance_score ?? 0;
   const scoreWidth = (score / 10) * 100;
@@ -255,7 +335,7 @@ function buildCard(r, index) {
         <div class="card-name">${r.name || 'Unknown'}</div>
         <div class="card-title">${[r.position, r.company].filter(Boolean).join(' · ') || ''}</div>
       </div>
-      <span class="badge ${badgeClass}">${source}</span>
+      <button class="intro-btn" onclick="toggleIntro(this, ${JSON.stringify(r).replace(/"/g, '&quot;')})">Request Intro</button>
     </div>
     <div class="score-row">
       <div class="score-bar"><div class="score-fill" style="width:${scoreWidth}%"></div></div>
@@ -352,5 +432,17 @@ function copyEmail() {
 function closeModal(e) { if (e.target === document.getElementById('modalOverlay')) closeModalDirect(); }
 function closeModalDirect() { document.getElementById('modalOverlay').classList.remove('active'); }
 </script>
+<div class="email-modal-overlay" id="emailModal">
+  <div class="email-modal">
+    <div class="email-modal-title">Almost there</div>
+    <div class="email-modal-desc">Enter your email so we can track this intro request.</div>
+    <input type="email" class="email-modal-input" id="requesterEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter') confirmIntros()" />
+    <div class="email-modal-error" id="emailError"></div>
+    <div class="email-modal-actions">
+      <button class="email-modal-cancel" onclick="document.getElementById('emailModal').classList.remove('active')">Cancel</button>
+      <button class="email-modal-confirm" id="confirmIntrosBtn" onclick="confirmIntros()">Continue →</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
