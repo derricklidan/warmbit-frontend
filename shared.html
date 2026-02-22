@@ -137,6 +137,9 @@
   .request-bar.active { display: flex; }
   .request-bar-label { font-family: 'DM Mono', monospace; font-size: 11px; color: #c8f25a; letter-spacing: 0.08em; }
   .request-bar-btn { background: #c8f25a; color: #0a0a0a; border: none; padding: 10px 24px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
+  .show-more-wrap { text-align: center; margin-top: 24px; }
+  .show-more-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 10px 28px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .show-more-btn:hover { border-color: #c8f25a; color: #c8f25a; }
   .email-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 200; align-items: center; justify-content: center; padding: 40px; }
   .email-modal-overlay.active { display: flex; }
   .email-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; width: 100%; max-width: 440px; padding: 32px; display: flex; flex-direction: column; gap: 16px; }
@@ -409,6 +412,50 @@ function render(payload) {
 
   const date = t ? new Date(t).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
 
+  const PAGE_SIZE = 15;
+  let _shownCount = 0;
+  let _allResults = results;
+
+  function renderGrid() {
+    const grid = document.getElementById('sharedGrid');
+    const toShow = _allResults.slice(_shownCount, _shownCount + PAGE_SIZE);
+    toShow.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const score = r.relevance_score || 0;
+      const pct = (score / 10) * 100;
+      const subtitle = [r.position, r.company].filter(Boolean).join(' · ');
+      const rJson = JSON.stringify(r).replace(/"/g, '&quot;');
+      card.innerHTML = `
+        <div class="card-header">
+          <div>
+            <div class="card-name">${r.name || 'Unknown'}</div>
+            ${subtitle ? `<div class="card-title">${subtitle}</div>` : ''}
+          </div>
+          <button class="intro-btn" onclick="toggleIntro(this, ${rJson})">Request Intro</button>
+        </div>
+        <div class="score-bar-wrap">
+          <div class="score-bar-track"><div class="score-bar-fill" style="width: ${pct}%"></div></div>
+          <div class="score-num">${score}</div>
+        </div>
+        <div class="card-reason">${r.reason || ''}</div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          ${r.linkedin_url ? `<a href="${r.linkedin_url}" target="_blank" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);padding:6px 14px;border-radius:2px;text-decoration:none;">LinkedIn →</a>` : ''}
+        </div>`;
+      grid.appendChild(card);
+    });
+    _shownCount += toShow.length;
+    const wrap = document.getElementById('showMoreWrap');
+    if (_shownCount >= _allResults.length) {
+      wrap.style.display = 'none';
+    } else {
+      wrap.style.display = 'block';
+      document.getElementById('showMoreBtn').textContent = `Show ${Math.min(PAGE_SIZE, _allResults.length - _shownCount)} More →`;
+    }
+  }
+
+  window._renderGrid = renderGrid;
+
   let html = `
     <div class="query-banner">
       <div class="query-label">Search Query</div>
@@ -420,9 +467,16 @@ function render(payload) {
     </div>
     <div class="divider"></div>
     <div class="results-count">${results.length} INTRODUCTION${results.length !== 1 ? 'S' : ''}</div>
-    <div class="results-grid">
+    <div class="results-grid" id="sharedGrid"></div>
+    <div id="showMoreWrap" class="show-more-wrap" style="display:none">
+      <button class="show-more-btn" id="showMoreBtn" onclick="window._renderGrid()">Show More →</button>
+    </div>
   `;
+  content.innerHTML = html;
+  renderGrid();
+  return;
 
+  // legacy - not reached
   results.forEach(r => {
     const score = r.relevance_score || 0;
     const pct = (score / 10) * 100;

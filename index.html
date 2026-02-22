@@ -112,6 +112,10 @@
   .thanks-title { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
   .thanks-desc { font-size: 14px; color: #888; line-height: 1.65; }
   .thanks-close { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+  .show-more-wrap { text-align: center; margin-top: 24px; display: none; }
+  .show-more-wrap.active { display: block; }
+  .show-more-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 10px 28px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
+  .show-more-btn:hover { border-color: var(--accent); color: var(--accent); }
   @media (max-width: 640px) {
     .results-grid { grid-template-columns: 1fr; }
     main { padding: 40px 20px; }
@@ -182,6 +186,9 @@
     <button class="share-btn" id="shareBtn" onclick="shareResults()">Share Results →</button>
   </div>
   <div class="results-grid" id="resultsGrid"></div>
+  <div class="show-more-wrap" id="showMoreWrap">
+    <button class="show-more-btn" id="showMoreBtn" onclick="showMore()">Show 15 More →</button>
+  </div>
 </main>
 
 <div class="request-bar" id="requestBar">
@@ -250,13 +257,23 @@ async function doSearch() {
 
     _lastQuery = query;
     _lastResults = results;
+    _shownCount = 0;
 
     if (results.length === 0) {
       empty.classList.add('active');
     } else {
       header.classList.add('active');
       document.getElementById('resultsCount').textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
-      results.forEach((r, i) => grid.appendChild(buildCard(r, i)));
+      const first = results.slice(0, PAGE_SIZE);
+      first.forEach((r, i) => grid.appendChild(buildCard(r, i)));
+      _shownCount = first.length;
+      const wrap = document.getElementById('showMoreWrap');
+      if (results.length > PAGE_SIZE) {
+        document.getElementById('showMoreBtn').textContent = `Show ${Math.min(PAGE_SIZE, results.length - PAGE_SIZE)} More →`;
+        wrap.classList.add('active');
+      } else {
+        wrap.classList.remove('active');
+      }
     }
   } catch (err) {
     empty.textContent = 'Error connecting to backend.';
@@ -268,6 +285,21 @@ async function doSearch() {
 }
 
 const _selectedIntros = new Map();
+let _shownCount = 0;
+const PAGE_SIZE = 15;
+
+function showMore() {
+  const next = _lastResults.slice(_shownCount, _shownCount + PAGE_SIZE);
+  const grid = document.getElementById('resultsGrid');
+  next.forEach((r, i) => grid.appendChild(buildCard(r, _shownCount + i)));
+  _shownCount += next.length;
+  if (_shownCount >= _lastResults.length) {
+    document.getElementById('showMoreWrap').classList.remove('active');
+  } else {
+    const remaining = _lastResults.length - _shownCount;
+    document.getElementById('showMoreBtn').textContent = `Show ${Math.min(PAGE_SIZE, remaining)} More →`;
+  }
+}
 
 function updateRequestBar() {
   const bar = document.getElementById('requestBar');
