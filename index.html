@@ -237,8 +237,8 @@ async function shareResults() {
     const data = await res.json();
     const url = `https://warmbit.co/s/${data.id}`;
 
-    // Try native share on mobile/safari
-    if (navigator.share) {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile && navigator.share) {
       navigator.share({ title: 'Warmbit Results', url }).catch(() => {});
       btn.textContent = 'LINK READY ✓';
     } else {
