@@ -368,7 +368,7 @@ function render(payload) {
         </div>
         <div class="card-reason">${r.reason || ''}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-          ${r.email ? `<div class="card-email">${r.email}</div>` : '<div></div>'}
+          <div></div>
           ${r.linkedin_url ? `<a href="${r.linkedin_url}" target="_blank" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);padding:6px 14px;border-radius:2px;text-decoration:none;">LinkedIn →</a>` : ''}
         </div>
       </div>

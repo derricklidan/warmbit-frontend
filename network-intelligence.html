@@ -343,10 +343,9 @@ function buildCard(r, index) {
     </div>
     <div class="card-reason">${r.reason || ''}</div>
     <div class="card-footer">
-      <span class="card-email">${r.email ? '✉ ' + r.email : ''}</span>
+      <span></span>
       <div style="display:flex;gap:8px;flex-shrink:0">
         ${r.linkedin_url ? `<a href="${r.linkedin_url}" target="_blank" class="draft-btn" style="text-decoration:none">LinkedIn →</a>` : ''}
-        <button class="draft-btn" onclick="draftEmail(${JSON.stringify(r).replace(/"/g, '&quot;')})">Draft email →</button>
       </div>
     </div>
   `;
