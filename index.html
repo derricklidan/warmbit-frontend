@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Warmbit · Network Intelligence</title>
+<title>Rolodex · Network Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -130,7 +130,7 @@
 
 <header>
   <div class="header-inner">
-    <span class="logo">WARM<strong>BIT</strong></span>
+    <span class="logo">ROLODEX</span>
     <div class="status-dot" title="Backend connected"></div>
   </div>
 </header>
@@ -410,7 +410,7 @@ async function shareResults() {
 
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     if (isMobile && navigator.share) {
-      navigator.share({ title: 'Warmbit Results', url }).catch(() => {});
+      navigator.share({ title: 'Rolodex Results', url }).catch(() => {});
       btn.textContent = 'LINK READY ✓';
     } else {
       try {
