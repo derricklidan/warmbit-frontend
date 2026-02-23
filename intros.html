@@ -173,8 +173,22 @@ async function toggleDraft(reqId, people, query, requesterEmail, btn) {
   if (box.dataset.loaded) return;
   box.dataset.loaded = '1';
 
-  const peopleList = people.map(p => `${p.name} (${[p.position, p.company].filter(Boolean).join(' at ')})`).join(', ');
-  const prompt = `Draft a warm intro email from me (Derrick) to ${requesterEmail} introducing them to: ${peopleList}. Context for the request: "${query}". Keep it concise, warm, and professional. Use first names. Format it ready to send.`;
+  const person = people[0];
+  const firstName = (person.name || '').split(' ')[0];
+  const personContext = [person.position, person.company].filter(Boolean).join(' at ');
+  const prompt = `Draft a short, warm email from me (Derrick, a VC) to ${firstName} (${personContext}).
+
+The person who asked for this intro is ${requesterEmail}. The search context was: "${query}".
+
+The email should:
+- Be addressed to ${firstName}
+- Briefly explain that I work with a portfolio company that I think is relevant to them
+- Reference why they specifically would care based on their role/company and the search context
+- Ask if I can make the intro
+- Be 3-4 sentences max, casual and warm, no fluff
+- End with asking if ok to connect them
+
+Only output the email body, ready to send. No subject line.`;
 
   try {
     const res = await fetch(`${API}/draft_email`, {
