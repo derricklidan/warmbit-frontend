@@ -140,14 +140,20 @@ function getBadgeClass(source) {
   return 'badge-email';
 }
 
-async function markDone(id, btn) {
+async function markDone(id, btn, blockId) {
   btn.textContent = 'Saving...';
   btn.disabled = true;
   try {
     await fetch(`${API}/intro_request/${id}/complete`, { method: 'POST' });
     const req = _allRequests.find(r => r.id === id);
     if (req) req.completed = true;
-    renderRequests();
+    // Update just this block instead of full re-render
+    const block = document.getElementById(blockId);
+    if (block) {
+      block.classList.add('done');
+      const actions = block.querySelector('.request-actions');
+      btn.replaceWith(Object.assign(document.createElement('span'), { className: 'done-tag', textContent: '✓ Intro sent' }));
+    }
   } catch (e) {
     btn.textContent = 'Error — retry';
     btn.disabled = false;
@@ -194,29 +200,19 @@ function copyDraft(btn, reqId) {
   });
 }
 
-function buildRequestBlock(req) {
+function buildPersonBlock(req, person, idx) {
   const date = new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const people = req.requested_people || [];
-  const block = document.createElement('div');
-  block.className = `request-block${req.completed ? ' done' : ''}`;
-
-  const peopleHtml = people.map(p => {
-    const subtitle = [p.position, p.company].filter(Boolean).join(' · ');
-    const badgeClass = getBadgeClass(p.source);
-    return `<div class="person-chip">
-      <div class="person-chip-name">${p.name || 'Unknown'}</div>
-      ${subtitle ? `<div class="person-chip-title">${subtitle}</div>` : ''}
-      ${p.email ? `<div class="person-chip-email">✉ ${p.email}</div>` : ''}
-      <div class="person-chip-links">
-        <span class="badge ${badgeClass}">${(p.source || 'email').toLowerCase()}</span>
-        ${p.linkedin_url ? `<a href="${p.linkedin_url}" target="_blank" class="person-chip-linkedin">LinkedIn →</a>` : ''}
-      </div>
-    </div>`;
-  }).join('');
-
-  const peopleJson = JSON.stringify(people).replace(/"/g, '&quot;');
+  const subtitle = [person.position, person.company].filter(Boolean).join(' · ');
+  const badgeClass = getBadgeClass(person.source);
+  const blockId = `${req.id}-${idx}`;
+  const doneKey = `${req.id}-${idx}`;
+  const personJson = JSON.stringify([person]).replace(/"/g, '&quot;');
   const queryEsc = (req.query || '').replace(/"/g, '&quot;');
   const emailEsc = (req.requester_email || '').replace(/"/g, '&quot;');
+
+  const block = document.createElement('div');
+  block.className = `request-block${req.completed ? ' done' : ''}`;
+  block.id = `block-${blockId}`;
 
   block.innerHTML = `
     <div class="request-meta">
@@ -224,23 +220,37 @@ function buildRequestBlock(req) {
       <span class="request-date">${date}</span>
     </div>
     ${req.query ? `<div class="request-query">"${req.query}"</div>` : ''}
-    <div class="people-grid">${peopleHtml}</div>
+    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:400;">${person.name || 'Unknown'}</div>
+      ${subtitle ? `<div style="font-size:12px;color:var(--muted);">${subtitle}</div>` : ''}
+      ${person.email ? `<div class="person-chip-email">✉ ${person.email}</div>` : ''}
+      <div class="person-chip-links">
+        <span class="badge ${badgeClass}">${(person.source || 'email').toLowerCase()}</span>
+        ${person.linkedin_url ? `<a href="${person.linkedin_url}" target="_blank" class="person-chip-linkedin">LinkedIn →</a>` : ''}
+      </div>
+    </div>
     <div class="request-actions">
       ${req.completed
         ? `<span class="done-tag">✓ Intro sent</span>`
-        : `<button class="done-btn" onclick="markDone('${req.id}', this)">Mark Intro Done</button>`
+        : `<button class="done-btn" onclick="markDone('${req.id}', this, 'block-${blockId}')">Mark Intro Done</button>`
       }
-      <button class="draft-btn" onclick="toggleDraft('${req.id}', JSON.parse(this.dataset.people), this.dataset.query, this.dataset.email, this)" data-people="${peopleJson}" data-query="${queryEsc}" data-email="${emailEsc}">Draft Email</button>
-      <span class="count-tag">${people.length} intro${people.length !== 1 ? 's' : ''} requested</span>
+      <button class="draft-btn" onclick="toggleDraft('${blockId}', JSON.parse(this.dataset.people), this.dataset.query, this.dataset.email, this)" data-people="${personJson}" data-query="${queryEsc}" data-email="${emailEsc}">Draft Email</button>
     </div>
-    <div class="email-draft-box" id="draft-${req.id}">
+    <div class="email-draft-box" id="draft-${blockId}">
       <div class="email-draft-label">Draft Intro Email</div>
       <div class="email-draft-loading"><div class="loader-dots"><span></span><span></span><span></span></div><span>Drafting...</span></div>
       <div class="email-draft-body"></div>
-      <button class="copy-email-btn" style="display:none" onclick="copyDraft(this, '${req.id}')">Copy</button>
+      <button class="copy-email-btn" style="display:none" onclick="copyDraft(this, '${blockId}')">Copy</button>
     </div>`;
 
   return block;
+}
+
+function buildRequestBlock(req) {
+  const people = req.requested_people || [];
+  const frag = document.createDocumentFragment();
+  people.forEach((p, i) => frag.appendChild(buildPersonBlock(req, p, i)));
+  return frag;
 }
 
 function renderRequests() {
