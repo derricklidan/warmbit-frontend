@@ -239,6 +239,7 @@ function buildPersonBlock(req, person, idx) {
       ${subtitle ? `<div style="font-size:12px;color:var(--muted);">${subtitle}</div>` : ''}
       ${person.email ? `<div class="person-chip-email">✉ ${person.email}</div>` : ''}
       <div class="person-chip-links">
+        <span class="badge ${badgeClass}">${(person.source || 'email').toLowerCase()}</span>
         ${person.linkedin_url ? `<a href="${person.linkedin_url}" target="_blank" class="person-chip-linkedin">LinkedIn →</a>` : ''}
       </div>
     </div>
