@@ -52,6 +52,13 @@
   .draft-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 16px; border-radius: 2px; cursor: pointer; transition: all 0.15s; border: 1px solid var(--border); color: var(--muted); background: transparent; }
   .draft-btn:hover { border-color: var(--accent); color: var(--accent); }
   .done-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.08em; }
+  .disregard-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 16px; border-radius: 2px; cursor: pointer; transition: all 0.15s; border: 1px solid rgba(255,80,80,0.3); color: rgba(255,80,80,0.6); background: transparent; }
+  .disregard-btn:hover { background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.8); color: #ff5050; }
+  .disregard-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: rgba(255,80,80,0.5); letter-spacing: 0.08em; }
+  .request-block.disregarded { opacity: 0.3; }
+  .disregard-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 7px 16px; border-radius: 2px; cursor: pointer; transition: all 0.15s; border: 1px solid rgba(255,80,80,0.3); color: rgba(255,80,80,0.6); background: transparent; }
+  .disregard-btn:hover { background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.7); color: rgba(255,80,80,1); }
+  .disregard-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: rgba(255,80,80,0.5); letter-spacing: 0.08em; }
   .count-tag { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-left: auto; }
   .email-draft-box { margin-top: 14px; background: #0d0d0d; border: 1px solid var(--border); border-radius: 3px; padding: 16px; display: none; }
   .email-draft-box.active { display: block; }
@@ -109,6 +116,7 @@
     <div class="filters" style="margin-bottom:0;">
       <button class="filter-btn active" onclick="setFilter('pending', this)">Pending</button>
       <button class="filter-btn" onclick="setFilter('done', this)">Done</button>
+      <button class="filter-btn" onclick="setFilter('disregarded', this)">Disregarded</button>
       <button class="filter-btn" onclick="setFilter('all', this)">All</button>
     </div>
     <div style="display:flex;gap:8px;">
@@ -160,12 +168,39 @@ async function markDone(id, btn, blockId) {
     await fetch(`${API}/intro_request/${id}/complete`, { method: 'POST' });
     const req = _allRequests.find(r => r.id === id);
     if (req) req.completed = true;
-    // Update just this block instead of full re-render
     const block = document.getElementById(blockId);
     if (block) {
       block.classList.add('done');
       const actions = block.querySelector('.request-actions');
-      btn.replaceWith(Object.assign(document.createElement('span'), { className: 'done-tag', textContent: '✓ Intro sent' }));
+      // Remove both action buttons and replace with done tag
+      actions.querySelectorAll('.done-btn, .disregard-btn').forEach(b => b.remove());
+      const tag = document.createElement('span');
+      tag.className = 'done-tag';
+      tag.textContent = '✓ Intro sent';
+      actions.prepend(tag);
+    }
+  } catch (e) {
+    btn.textContent = 'Error — retry';
+    btn.disabled = false;
+  }
+}
+
+async function markDisregarded(id, btn, blockId) {
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  try {
+    await fetch(`${API}/intro_request/${id}/disregard`, { method: 'POST' });
+    const req = _allRequests.find(r => r.id === id);
+    if (req) req.disregarded = true;
+    const block = document.getElementById(blockId);
+    if (block) {
+      block.classList.add('done');
+      const actions = block.querySelector('.request-actions');
+      actions.querySelectorAll('.done-btn, .disregard-btn').forEach(b => b.remove());
+      const tag = document.createElement('span');
+      tag.className = 'disregard-tag';
+      tag.textContent = '✕ Disregarded';
+      actions.prepend(tag);
     }
   } catch (e) {
     btn.textContent = 'Error — retry';
@@ -238,7 +273,7 @@ function buildPersonBlock(req, person, idx) {
   const emailEsc = (req.requester_email || '').replace(/"/g, '&quot;');
 
   const block = document.createElement('div');
-  block.className = `request-block${req.completed ? ' done' : ''}`;
+  block.className = `request-block${req.disregarded ? ' disregarded' : req.completed ? ' done' : ''}`;
   block.id = `block-${blockId}`;
 
   block.innerHTML = `
@@ -264,7 +299,10 @@ function buildPersonBlock(req, person, idx) {
     <div class="request-actions">
       ${req.completed
         ? `<span class="done-tag">✓ Intro sent</span>`
-        : `<button class="done-btn" onclick="markDone('${req.id}', this, 'block-${blockId}')">Mark Intro Done</button>`
+        : req.disregarded
+        ? `<span class="disregard-tag">✕ Disregarded</span>`
+        : `<button class="done-btn" onclick="markDone('${req.id}', this, 'block-${blockId}')">Mark Intro Done</button>
+           <button class="disregard-btn" onclick="markDisregarded('${req.id}', this, 'block-${blockId}')">Disregard</button>`
       }
       <button class="draft-btn" onclick="toggleDraft('${blockId}', JSON.parse(this.dataset.people), this.dataset.query, this.dataset.email, this)" data-people="${personJson}" data-query="${queryEsc}" data-email="${emailEsc}">Draft Email</button>
     </div>
@@ -294,8 +332,9 @@ function renderRequests() {
   const list = document.getElementById('requestsList');
   list.innerHTML = '';
 
-  const pending = _allRequests.filter(r => !r.completed);
-  const done = _allRequests.filter(r => r.completed);
+  const pending = _allRequests.filter(r => !r.completed && !r.disregarded);
+  const done = _allRequests.filter(r => r.completed && !r.disregarded);
+  const disregarded = _allRequests.filter(r => r.disregarded);
 
   if (_allRequests.length === 0) {
     list.innerHTML = '<div class="empty">No intro requests yet.</div>';
@@ -308,22 +347,19 @@ function renderRequests() {
   } else if (_currentFilter === 'done') {
     if (done.length === 0) { list.innerHTML = '<div class="empty">No completed intros yet.</div>'; return; }
     done.forEach(r => list.appendChild(buildRequestBlock(r)));
+  } else if (_currentFilter === 'disregarded') {
+    if (disregarded.length === 0) { list.innerHTML = '<div class="empty">No disregarded requests.</div>'; return; }
+    disregarded.forEach(r => list.appendChild(buildRequestBlock(r)));
   } else {
-    // All — show pending first then done with headers
-    if (pending.length > 0) {
+    const sections = [['Pending', pending], ['Done', done], ['Disregarded', disregarded]];
+    sections.forEach(([label, items]) => {
+      if (items.length === 0) return;
       const h = document.createElement('div');
       h.className = 'section-header';
-      h.textContent = `Pending · ${pending.length}`;
+      h.textContent = `${label} · ${items.length}`;
       list.appendChild(h);
-      pending.forEach(r => list.appendChild(buildRequestBlock(r)));
-    }
-    if (done.length > 0) {
-      const h = document.createElement('div');
-      h.className = 'section-header';
-      h.textContent = `Done · ${done.length}`;
-      list.appendChild(h);
-      done.forEach(r => list.appendChild(buildRequestBlock(r)));
-    }
+      items.forEach(r => list.appendChild(buildRequestBlock(r)));
+    });
   }
 }
 
