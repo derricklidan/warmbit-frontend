@@ -66,6 +66,8 @@
   .copy-email-btn { margin-top: 10px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
   .copy-email-btn:hover { border-color: var(--accent); color: var(--accent); }
   .empty { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; padding: 60px 0; letter-spacing: 0.08em; }
+  .export-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 14px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
+  .export-btn:hover { border-color: var(--accent); color: var(--accent); }
   #authGate { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
   .auth-box { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 40px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 16px; }
   .auth-label { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
@@ -98,10 +100,13 @@
 <main id="mainContent" style="display:none;">
   <div class="page-label">Admin</div>
   <div class="page-title">Intro Requests</div>
-  <div class="filters">
-    <button class="filter-btn active" onclick="setFilter('pending', this)">Pending</button>
-    <button class="filter-btn" onclick="setFilter('done', this)">Done</button>
-    <button class="filter-btn" onclick="setFilter('all', this)">All</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
+    <div class="filters" style="margin-bottom:0;">
+      <button class="filter-btn active" onclick="setFilter('pending', this)">Pending</button>
+      <button class="filter-btn" onclick="setFilter('done', this)">Done</button>
+      <button class="filter-btn" onclick="setFilter('all', this)">All</button>
+    </div>
+    <button class="export-btn" onclick="exportCSV()">Export CSV →</button>
   </div>
   <div id="requestsList"><div class="empty">Loading...</div></div>
 </main>
@@ -302,6 +307,41 @@ function renderRequests() {
       done.forEach(r => list.appendChild(buildRequestBlock(r)));
     }
   }
+}
+
+function exportCSV() {
+  let filtered = _allRequests;
+  if (_currentFilter === 'pending') filtered = _allRequests.filter(r => !r.completed);
+  if (_currentFilter === 'done') filtered = _allRequests.filter(r => r.completed);
+
+  const rows = [['Name', 'Email', 'Company', 'Position', 'LinkedIn', 'Requested By', 'Query', 'Date', 'Status']];
+
+  filtered.forEach(req => {
+    const date = new Date(req.created_at).toLocaleDateString();
+    const status = req.completed ? 'Done' : 'Pending';
+    (req.requested_people || []).forEach(p => {
+      rows.push([
+        p.name || '',
+        p.email || '',
+        p.company || '',
+        p.position || '',
+        p.linkedin_url || '',
+        req.requester_email || '',
+        req.query || '',
+        date,
+        status
+      ]);
+    });
+  });
+
+  const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `intro-requests-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 async function loadRequests() {
