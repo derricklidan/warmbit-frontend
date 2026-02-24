@@ -66,7 +66,11 @@
   .copy-email-btn { margin-top: 10px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
   .copy-email-btn:hover { border-color: var(--accent); color: var(--accent); }
   .empty { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; padding: 60px 0; letter-spacing: 0.08em; }
-  .card-checkbox { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+  .custom-checkbox { width: 16px; height: 16px; border: 1px solid var(--border); border-radius: 2px; cursor: pointer; transition: all 0.15s; flex-shrink: 0; position: relative; }
+  .custom-checkbox:hover { border-color: var(--accent); }
+  .custom-checkbox.checked { background: var(--accent); border-color: var(--accent); }
+  .custom-checkbox.checked::after { content: ''; position: absolute; left: 4px; top: 1px; width: 5px; height: 9px; border: 2px solid #0a0a0a; border-top: none; border-left: none; transform: rotate(45deg); }
+  .checkbox-selected { border-color: var(--accent) !important; background: var(--accent-dim) !important; }
   .export-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 14px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
   .export-btn:hover { border-color: var(--accent); color: var(--accent); }
   #authGate { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
@@ -238,10 +242,14 @@ function buildPersonBlock(req, person, idx) {
   block.id = `block-${blockId}`;
 
   block.innerHTML = `
-    <div class="request-meta">
-      <input type="checkbox" class="card-checkbox" id="chk-${blockId}" data-block="${blockId}" />
-      <span class="requester">✉ ${req.requester_email}</span>
-      <span class="request-date">${date}</span>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div class="request-meta" style="margin-bottom:0;flex:1;">
+        <span class="requester">✉ ${req.requester_email}</span>
+        <span class="request-date">${date}</span>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;margin-left:12px;">
+        <div class="custom-checkbox" id="chk-${blockId}" data-block="${blockId}" onclick="this.classList.toggle('checked');this.closest('.request-block').classList.toggle('checkbox-selected',this.classList.contains('checked'))"></div>
+      </label>
     </div>
     ${req.query ? `<div class="request-query">"${req.query}"</div>` : ''}
     <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px;">
@@ -320,14 +328,22 @@ function renderRequests() {
 }
 
 function toggleSelectAll(btn) {
-  const checkboxes = document.querySelectorAll('.card-checkbox');
-  const allChecked = Array.from(checkboxes).every(c => c.checked);
-  checkboxes.forEach(c => c.checked = !allChecked);
+  const checkboxes = document.querySelectorAll('.custom-checkbox');
+  const allChecked = Array.from(checkboxes).every(c => c.classList.contains('checked'));
+  checkboxes.forEach(c => {
+    if (allChecked) {
+      c.classList.remove('checked');
+      c.closest('.request-block').classList.remove('checkbox-selected');
+    } else {
+      c.classList.add('checked');
+      c.closest('.request-block').classList.add('checkbox-selected');
+    }
+  });
   btn.textContent = allChecked ? 'Select All' : 'Deselect All';
 }
 
 function exportCSV() {
-  const checked = document.querySelectorAll('.card-checkbox:checked');
+  const checked = document.querySelectorAll('.custom-checkbox.checked');
   const rows = [['Name', 'Email', 'Company', 'Position', 'LinkedIn', 'Requested By', 'Query', 'Date', 'Status']];
 
   if (checked.length === 0) {
