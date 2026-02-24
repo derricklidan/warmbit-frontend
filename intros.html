@@ -66,6 +66,7 @@
   .copy-email-btn { margin-top: 10px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
   .copy-email-btn:hover { border-color: var(--accent); color: var(--accent); }
   .empty { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); text-align: center; padding: 60px 0; letter-spacing: 0.08em; }
+  .card-checkbox { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
   .export-btn { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 6px 14px; border-radius: 2px; cursor: pointer; border: 1px solid var(--border); color: var(--muted); background: transparent; transition: all 0.15s; }
   .export-btn:hover { border-color: var(--accent); color: var(--accent); }
   #authGate { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
@@ -106,7 +107,10 @@
       <button class="filter-btn" onclick="setFilter('done', this)">Done</button>
       <button class="filter-btn" onclick="setFilter('all', this)">All</button>
     </div>
-    <button class="export-btn" onclick="exportCSV()">Export CSV →</button>
+    <div style="display:flex;gap:8px;">
+      <button class="export-btn" onclick="toggleSelectAll(this)">Select All</button>
+      <button class="export-btn" onclick="exportCSV()">Export CSV →</button>
+    </div>
   </div>
   <div id="requestsList"><div class="empty">Loading...</div></div>
 </main>
@@ -235,6 +239,7 @@ function buildPersonBlock(req, person, idx) {
 
   block.innerHTML = `
     <div class="request-meta">
+      <input type="checkbox" class="card-checkbox" id="chk-${blockId}" data-block="${blockId}" />
       <span class="requester">✉ ${req.requester_email}</span>
       <span class="request-date">${date}</span>
     </div>
@@ -262,6 +267,11 @@ function buildPersonBlock(req, person, idx) {
       <button class="copy-email-btn" style="display:none" onclick="copyDraft(this, '${blockId}')">Copy</button>
     </div>`;
 
+  block.dataset.person = JSON.stringify(person);
+  block.dataset.requester = req.requester_email;
+  block.dataset.query = req.query || '';
+  block.dataset.date = req.created_at;
+  block.dataset.status = req.completed ? 'Done' : 'Pending';
   return block;
 }
 
@@ -309,29 +319,38 @@ function renderRequests() {
   }
 }
 
-function exportCSV() {
-  let filtered = _allRequests;
-  if (_currentFilter === 'pending') filtered = _allRequests.filter(r => !r.completed);
-  if (_currentFilter === 'done') filtered = _allRequests.filter(r => r.completed);
+function toggleSelectAll(btn) {
+  const checkboxes = document.querySelectorAll('.card-checkbox');
+  const allChecked = Array.from(checkboxes).every(c => c.checked);
+  checkboxes.forEach(c => c.checked = !allChecked);
+  btn.textContent = allChecked ? 'Select All' : 'Deselect All';
+}
 
+function exportCSV() {
+  const checked = document.querySelectorAll('.card-checkbox:checked');
   const rows = [['Name', 'Email', 'Company', 'Position', 'LinkedIn', 'Requested By', 'Query', 'Date', 'Status']];
 
-  filtered.forEach(req => {
-    const date = new Date(req.created_at).toLocaleDateString();
-    const status = req.completed ? 'Done' : 'Pending';
-    (req.requested_people || []).forEach(p => {
-      rows.push([
-        p.name || '',
-        p.email || '',
-        p.company || '',
-        p.position || '',
-        p.linkedin_url || '',
-        req.requester_email || '',
-        req.query || '',
-        date,
-        status
-      ]);
-    });
+  if (checked.length === 0) {
+    alert('Please check at least one person to export.');
+    return;
+  }
+
+  checked.forEach(chk => {
+    const block = chk.closest('.request-block');
+    if (!block || !block.dataset.person) return;
+    const p = JSON.parse(block.dataset.person);
+    const date = new Date(block.dataset.date).toLocaleDateString();
+    rows.push([
+      p.name || '',
+      p.email || '',
+      p.company || '',
+      p.position || '',
+      p.linkedin_url || '',
+      block.dataset.requester || '',
+      block.dataset.query || '',
+      date,
+      block.dataset.status || ''
+    ]);
   });
 
   const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
