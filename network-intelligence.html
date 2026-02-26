@@ -112,6 +112,13 @@
   .thanks-title { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); }
   .thanks-desc { font-size: 14px; color: #888; line-height: 1.65; }
   .thanks-close { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 8px 18px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; margin-top: 8px; }
+  .feed-section { margin-top: 32px; }
+  .feed-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .feed-item { display: flex; align-items: baseline; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 16px; cursor: pointer; transition: opacity 0.15s; }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover { opacity: 0.7; }
+  .feed-query { font-size: 13px; color: #aaa; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .feed-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); flex-shrink: 0; }
   .show-more-wrap { text-align: center; margin-top: 24px; display: none; }
   .show-more-wrap.active { display: block; }
   .show-more-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 10px 28px; border-radius: 2px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.15s; }
@@ -143,7 +150,12 @@
       <button class="search-btn" id="searchBtn" onclick="doSearch()">Search</button>
     </div>
 
-    <div class="inspiration">
+    <div id="searchFeed" class="feed-section" style="display:none;">
+      <div class="feed-label">Recent Searches</div>
+      <div id="feedList"></div>
+    </div>
+
+    <div class="inspiration" id="inspirationSection">
       <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;margin-top:36px;">Examples</div>
       <div class="inspiration-categories">
         <div class="category">
@@ -214,7 +226,12 @@
 </div>
 
 <script>
-function fillSearch(chip) {
+function fillSearch(chip, queryStr) {
+  if (queryStr) {
+    document.getElementById('searchInput').value = queryStr;
+    document.getElementById('searchInput').focus();
+    return;
+  }
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   chip.classList.add('active');
   document.getElementById('searchInput').value = chip.textContent;
@@ -245,6 +262,8 @@ async function doSearch() {
   empty.classList.remove('active');
   grid.innerHTML = '';
   header.classList.remove('active');
+  document.getElementById('inspirationSection').style.display = 'none';
+  document.getElementById('searchFeed').style.display = 'none';
 
   try {
     const res = await fetch(`${API}/search`, {
@@ -285,6 +304,36 @@ async function doSearch() {
 }
 
 const _selectedIntros = new Map();
+
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr)) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+async function loadFeed() {
+  try {
+    const res = await fetch(`${API}/recent_searches`);
+    const data = await res.json();
+    const searches = data.searches || [];
+    const feed = document.getElementById('searchFeed');
+    const list = document.getElementById('feedList');
+    if (!searches.length) return;
+    list.innerHTML = searches.map(s => `
+      <div class="feed-item" onclick="fillSearch(null, ${JSON.stringify(s.query).replace(/"/g, '&quot;')})">
+        <span class="feed-query">${s.query}</span>
+        <span class="feed-time">${timeAgo(s.created_at)}</span>
+      </div>`).join('');
+    feed.style.display = 'block';
+  } catch (e) {
+    console.error('Feed load failed', e);
+  }
+}
+
+loadFeed();
 let _shownCount = 0;
 const PAGE_SIZE = 15;
 
